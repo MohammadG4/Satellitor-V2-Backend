@@ -1,0 +1,6 @@
+.env
+.venv
+docker-compose.yml
+Makefile
+Dockerfile
+docker.ps1
