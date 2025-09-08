@@ -1,8 +1,6 @@
 TODO List
 
-- make the pipline for the script that will get the tiff image every 5 days
-
-- in the pipline it must create a newtiff with customized bands b1:ndvi, b2:ndre ,b3:ndmi
+- folder of indices_data where to host it
 
 - make black list for logout for the JWToken
 
