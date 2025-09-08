@@ -10,9 +10,7 @@ from .models import (
     LandSize,
     Crops,
     CropInstances,
-    CropCalendar,
-    SatelliteImage,
-    VegetationIndex,
+    VegetationIndexSet,
 )
 
 
@@ -46,22 +44,9 @@ class CropInstancesAdmin(admin.ModelAdmin):
     search_fields = ("land__name", "crop__crop_name")
 
 
-@admin.register(CropCalendar)
-class CropCalendarAdmin(admin.ModelAdmin):
-    list_display = ("crop", "season_name", "start_month", "end_month")
-    list_filter = ("season_name",)
-    search_fields = ("crop__crop_name",)
 
-
-@admin.register(SatelliteImage)
-class SatelliteImageAdmin(admin.ModelAdmin):
-    list_display = ("land", "band_name", "acquisition_date", "resolution_m")
-    list_filter = ("band_name", "acquisition_date")
-    search_fields = ("land__name", "band_name", "file_path")
-
-
-@admin.register(VegetationIndex)
-class VegetationIndexAdmin(admin.ModelAdmin):
-    list_display = ("land", "index_type", "acquisition_date", "min_value", "mean_value", "max_value")
-    list_filter = ("index_type", "acquisition_date")
-    search_fields = ("land__name", "index_type", "value_raster_path")
+@admin.register(VegetationIndexSet)
+class VegetationIndexSetAdmin(admin.ModelAdmin):
+    list_display = ("land", "acquisition_date", "file_path")
+    list_filter = ("acquisition_date",)
+    search_fields = ("land__name", "file_path")

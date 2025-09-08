@@ -6,3 +6,4 @@ psycopg2-binary==2.9.9
 django-environ==0.11.2
 setuptools==75.1.0
 djangorestframework-gis==1.1
+django-filter==24.2

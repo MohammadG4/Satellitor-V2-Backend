@@ -1,6 +1,6 @@
 from django.contrib.gis.db import models
 from django.contrib.auth import get_user_model
-from django.core.validators import MinValueValidator, MaxValueValidator
+from django.db.models import JSONField
 
 User = get_user_model()
 
@@ -17,7 +17,6 @@ class Land(models.Model):
     status = models.BooleanField(default=True, verbose_name="Active Status")
     notes = models.TextField(blank=True, null=True, verbose_name="Notes")
     image_url = models.URLField(blank=True, null=True, verbose_name="Image URL")
-    # Geospatial polygon representing the land boundary (WGS84)
     boundary = models.PolygonField(srid=4326, geography=True, spatial_index=True, verbose_name="Boundary")
 
     class Meta:
@@ -30,42 +29,6 @@ class Land(models.Model):
 
     def __str__(self):
         return f"{self.name} - {self.user.username}"
-
-
-class SatelliteImage(models.Model):
-    """Metadata for downloaded satellite band rasters associated with a land."""
-    BAND_CHOICES = [
-        ("B01", "Band 1 - Coastal Aerosol"),
-        ("B02", "Band 2 - Blue"),
-        ("B03", "Band 3 - Green"),
-        ("B04", "Band 4 - Red"),
-        ("B05", "Band 5 - Red Edge 1"),
-        ("B06", "Band 6 - Red Edge 2"),
-        ("B07", "Band 7 - Red Edge 3"),
-        ("B08", "Band 8 - NIR"),
-        ("B8A", "Band 8A - Narrow NIR"),
-        ("B09", "Band 9 - Water Vapour"),
-        ("B11", "Band 11 - SWIR 1"),
-        ("B12", "Band 12 - SWIR 2"),
-    ]
-
-    land = models.ForeignKey(Land, on_delete=models.CASCADE, related_name="satellite_images", verbose_name="Land")
-    band_name = models.CharField(max_length=4, choices=BAND_CHOICES, verbose_name="Band Name")
-    acquisition_date = models.DateField(verbose_name="Acquisition Date")
-    file_path = models.CharField(max_length=500, verbose_name="GeoTIFF File Path")
-    resolution_m = models.PositiveIntegerField(verbose_name="Resolution (m)")
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Created At")
-
-    class Meta:
-        verbose_name = "Satellite Image"
-        verbose_name_plural = "Satellite Images"
-        ordering = ["-acquisition_date", "band_name"]
-        constraints = [
-            models.UniqueConstraint(fields=["land", "band_name", "acquisition_date"], name="uniq_land_band_date"),
-        ]
-
-    def __str__(self):
-        return f"{self.land.name} | {self.band_name} | {self.acquisition_date}"
 
 
 class LandSize(models.Model):
@@ -131,67 +94,32 @@ class CropInstances(models.Model):
         return f"{self.crop.crop_name} on {self.land.name} - {self.planting_date}"
 
 
-class CropCalendar(models.Model):
-    """Model representing when each crop should be planted"""
-    crop = models.ForeignKey(Crops, on_delete=models.CASCADE, related_name='calendar', verbose_name="Crop")
-    season_name = models.CharField(max_length=20, verbose_name="Season Name")
-    start_month = models.PositiveIntegerField(
-        validators=[MinValueValidator(1), MaxValueValidator(12)],
-        verbose_name="Start Month"
-    )
-    end_month = models.PositiveIntegerField(
-        validators=[MinValueValidator(1), MaxValueValidator(12)],
-        verbose_name="End Month"
-    )
-
-    class Meta:
-        verbose_name = "Crop Calendar"
-        verbose_name_plural = "Crop Calendars"
-        ordering = ['crop', 'start_month']
-        constraints = [
-            models.CheckConstraint(check=models.Q(start_month__gte=1) & models.Q(start_month__lte=12), name="start_month_valid_range"),
-            models.CheckConstraint(check=models.Q(end_month__gte=1) & models.Q(end_month__lte=12), name="end_month_valid_range"),
-            models.CheckConstraint(check=models.Q(end_month__gte=models.F('start_month')), name="end_month_after_start_month"),
-            models.UniqueConstraint(fields=["crop", "season_name"], name="uniq_crop_season_name"),
-        ]
-
-    def __str__(self):
-        return f"{self.crop.crop_name} - {self.season_name} ({self.start_month}-{self.end_month})"
-
-    def clean(self):
-        from django.core.exceptions import ValidationError
-        if self.start_month > self.end_month:
-            raise ValidationError("Start month cannot be greater than end month")
-
-
-class VegetationIndex(models.Model):
-    """Computed vegetation index rasters for a land, optionally derived from a satellite image."""
-    INDEX_CHOICES = [
-        ("NDVI", "NDVI - Normalized Difference Vegetation Index"),
-        ("NDRE", "NDRE - Normalized Difference Red Edge"),
-        ("NDMI", "NDMI - Normalized Difference Moisture Index"),
-    ]
-
-    land = models.ForeignKey(Land, on_delete=models.CASCADE, related_name="vegetation_indices", verbose_name="Land")
-    source_image = models.ForeignKey(
-        'SatelliteImage', on_delete=models.SET_NULL, null=True, blank=True,
-        related_name='indices', verbose_name="Source Satellite Image"
-    )
-    index_type = models.CharField(max_length=10, choices=INDEX_CHOICES, verbose_name="Index Type")
+class VegetationIndexSet(models.Model):
+    """
+    Stores a multiband GeoTIFF with multiple vegetation indices
+    for a given land and acquisition date.
+    Example: Band1=NDVI, Band2=NDRE, Band3=NDMI
+    """
+    land = models.ForeignKey(Land, on_delete=models.CASCADE, related_name="veg_index_sets", verbose_name="Land")
     acquisition_date = models.DateField(verbose_name="Acquisition Date")
-    value_raster_path = models.CharField(max_length=500, verbose_name="Index GeoTIFF File Path")
-    min_value = models.FloatField(null=True, blank=True, verbose_name="Min")
-    max_value = models.FloatField(null=True, blank=True, verbose_name="Max")
-    mean_value = models.FloatField(null=True, blank=True, verbose_name="Mean")
+    file_path = models.CharField(max_length=500, verbose_name="Multiband GeoTIFF Path")
+    stats = JSONField(default=dict, verbose_name="Index Stats")
+    # Example stats structure:
+    # {
+    #   "NDVI": {"min": -0.2, "max": 0.9, "mean": 0.55},
+    #   "NDRE": {"min": -0.1, "max": 0.8, "mean": 0.45},
+    #   "NDMI": {"min": -0.3, "max": 0.7, "mean": 0.30}
+    # }
+
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Created At")
 
     class Meta:
-        verbose_name = "Vegetation Index"
-        verbose_name_plural = "Vegetation Indices"
-        ordering = ["-acquisition_date", "index_type"]
+        verbose_name = "Vegetation Index Set"
+        verbose_name_plural = "Vegetation Index Sets"
+        ordering = ["-acquisition_date"]
         constraints = [
-            models.UniqueConstraint(fields=["land", "index_type", "acquisition_date"], name="uniq_land_index_date"),
+            models.UniqueConstraint(fields=["land", "acquisition_date"], name="uniq_land_indexset_date"),
         ]
 
     def __str__(self):
-        return f"{self.land.name} | {self.index_type} | {self.acquisition_date}"
+        return f"{self.land.name} | Indices | {self.acquisition_date}"

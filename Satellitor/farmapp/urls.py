@@ -5,9 +5,7 @@ from .views import (
     LandSizeViewSet,
     CropsViewSet,
     CropInstancesViewSet,
-    CropCalendarViewSet,
-    SatelliteImageViewSet,
-    VegetationIndexViewSet,
+    VegetationIndexSetViewSet,
 )
 
 router = DefaultRouter()
@@ -15,9 +13,7 @@ router.register(r'lands', LandViewSet, basename='land')
 router.register(r'land-sizes', LandSizeViewSet, basename='landsize')
 router.register(r'crops', CropsViewSet, basename='crops')
 router.register(r'crop-instances', CropInstancesViewSet, basename='cropinstances')
-router.register(r'crop-calendar', CropCalendarViewSet, basename='cropcalendar')
-router.register(r'satellite-images', SatelliteImageViewSet, basename='satelliteimage')
-router.register(r'vegetation-indices', VegetationIndexViewSet, basename='vegetationindex')
+router.register(r'vegetation-index-sets', VegetationIndexSetViewSet, basename='vegetationindexset')
 
 urlpatterns = [
     path('', include(router.urls)),

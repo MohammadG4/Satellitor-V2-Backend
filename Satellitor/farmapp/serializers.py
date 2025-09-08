@@ -9,9 +9,7 @@ from .models import (
     LandSize,
     Crops,
     CropInstances,
-    CropCalendar,
-    SatelliteImage,
-    VegetationIndex,
+    VegetationIndexSet,
 )
 
 
@@ -108,47 +106,17 @@ class CropInstancesSerializer(serializers.ModelSerializer):
         read_only_fields = ["id"]
 
 
-class CropCalendarSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = CropCalendar
-        fields = [
-            "id",
-            "crop",
-            "season_name",
-            "start_month",
-            "end_month",
-        ]
-        read_only_fields = ["id"]
 
 
-class SatelliteImageSerializer(serializers.ModelSerializer):
+class VegetationIndexSetSerializer(serializers.ModelSerializer):
     class Meta:
-        model = SatelliteImage
+        model = VegetationIndexSet
         fields = [
             "id",
             "land",
-            "band_name",
             "acquisition_date",
             "file_path",
-            "resolution_m",
-            "created_at",
-        ]
-        read_only_fields = ["id", "created_at"]
-
-
-class VegetationIndexSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = VegetationIndex
-        fields = [
-            "id",
-            "land",
-            "source_image",
-            "index_type",
-            "acquisition_date",
-            "value_raster_path",
-            "min_value",
-            "max_value",
-            "mean_value",
+            "stats",
             "created_at",
         ]
         read_only_fields = ["id", "created_at"]
