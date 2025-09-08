@@ -1,7 +1,5 @@
 TODO List
 
-- make the when someone creats a land the size of the land in four units(feddan, acre ,hectare ,square_meter) is automatically computed and saved in the db and if the front can edit it if he wants
-
 - make the pipline for the script that will get the tiff image every 5 days
 
 - in the pipline it must create a newtiff with customized bands b1:ndvi, b2:ndre ,b3:ndmi
