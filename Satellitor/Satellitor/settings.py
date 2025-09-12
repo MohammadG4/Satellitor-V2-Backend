@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'django_filters',
     'authapp',
     'farmapp',
+    'alerts',
 ]
 
 REST_FRAMEWORK = {
@@ -186,3 +187,16 @@ SIMPLE_JWT = {
     'SLIDING_TOKEN_LIFETIME': timedelta(minutes=5),
     'SLIDING_TOKEN_REFRESH_LIFETIME': timedelta(days=1),
 }
+
+# Alert System Settings
+DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'noreply@satellitor.com')
+FRONTEND_URL = os.environ.get('FRONTEND_URL', 'http://localhost:3000')
+ALERT_WEBHOOK_URL = os.environ.get('ALERT_WEBHOOK_URL', '')
+
+# Email Settings (for alerts)
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = os.environ.get('EMAIL_HOST', 'localhost')
+EMAIL_PORT = int(os.environ.get('EMAIL_PORT', '587'))
+EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'True').lower() == 'true'
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')

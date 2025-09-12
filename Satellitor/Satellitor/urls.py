@@ -26,6 +26,7 @@ urlpatterns = [
 
     path('api/farm/', include('farmapp.urls')),
     path('api/auth/', include('authapp.urls')),
+    path('api/alerts/', include('alerts.urls')),
 ]
 
 

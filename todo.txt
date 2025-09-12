@@ -2,6 +2,8 @@ TODO List
 
 - folder of indices_data where to host it
 
+- make the alerting system
+
 - make black list for logout for the JWToken
 
 - make protection for many reqested in the same time 

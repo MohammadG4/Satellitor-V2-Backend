@@ -298,6 +298,17 @@ function evaluatePixel(s) {
             self.stdout.write(f'Created new VegetationIndexSet for {land.name} on {acquisition_date}')
         else:
             self.stdout.write(f'Updated VegetationIndexSet for {land.name} on {acquisition_date}')
+        
+        # Process alerts for this new vegetation index data
+        try:
+            from alerts.services import AlertManager
+            alert_manager = AlertManager()
+            alert_manager.process_new_vegetation_data(land, vegetation_index_set)
+            self.stdout.write(f'Processed alerts for {land.name} on {acquisition_date}')
+        except Exception as e:
+            self.stdout.write(
+                self.style.WARNING(f'Warning: Failed to process alerts for {land.name}: {str(e)}')
+            )
 
     def extract_band_statistics(self, file_path):
         """Extract min, max, mean statistics from each band of the GeoTIFF"""
